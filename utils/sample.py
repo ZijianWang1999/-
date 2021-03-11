@@ -38,11 +38,11 @@ def noniid_train(dataset, num_users):
 def noniid_test(dataset, num_users, ratio):
     dict_users_test = {i: np.array([], dtype='int64') for i in range(num_users)}
 
-    labels = dataset[:][1]
+    labels = dataset.train_labels.numpy()
     bucket = [[] for i in range(10)]
 
     for i in range(labels.size(0)):
-        bucket[labels[i][0]].append(i)
+        bucket[labels[i]].append(i)
 
     for i in range(num_users):
         total = 100

@@ -23,8 +23,8 @@ if __name__ == '__main__':
     test_set = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
     # split dataset {user_id: [list of data index]}
-    dict_users_train = noniid_train(train_set, args.num_users)
-    dict_users_test = noniid_test(test_set, args.num_users, dict_users_train)
+    dict_users_train, ratio = noniid_train(train_set, args.num_users)
+    dict_users_test = noniid_test(test_set, args.num_users, ratio)
 
     # load global model
     net_glob = CNN(args=args).to(args.device)
