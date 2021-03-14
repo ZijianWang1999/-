@@ -2,17 +2,11 @@ import numpy as np
 from torchvision import datasets, transforms
 
 def noniid_train(dataset, num_users):
-    """
-    Sample non-I.I.D client data from MNIST dataset
-    :param dataset:
-    :param num_users:
-    :return:
-    """
     num_shards, num_imgs = 200, 300
     idx_shard = [i for i in range(num_shards)]
     dict_users_train = {i: np.array([], dtype='int64') for i in range(num_users)}
-    idxs = np.arange(num_shards*num_imgs)
-    labels = dataset.train_labels.numpy()
+    idxs = np.arange(num_shards * num_imgs)
+    labels = np.array(dataset.targets)
 
     # sort labels
     idxs_labels = np.vstack((idxs, labels))
@@ -20,7 +14,7 @@ def noniid_train(dataset, num_users):
     idxs = idxs_labels[0,:]
 
     # ratio [0...9] 
-    ratio = [[0 for j in range(10)] for i in range(num_users)]
+    ratio = np.array([[0 for j in range(10)] for i in range(num_users)])
 
     # divide and assign
     for i in range(num_users):
@@ -31,27 +25,28 @@ def noniid_train(dataset, num_users):
         # get ratio
         for j in range(len(dict_users_train[i])):
             ratio[i][labels[dict_users_train[i][j]]] += 1
-        ratio[i] /= sum(ratio[i])
+        ratio[i] = ratio[i] / np.sum(ratio[i])
     
     return dict_users_train, ratio
 
 def noniid_test(dataset, num_users, ratio):
     dict_users_test = {i: np.array([], dtype='int64') for i in range(num_users)}
 
-    labels = dataset.train_labels.numpy()
-    bucket = [[] for i in range(10)]
+    labels = np.array(dataset.targets)
 
-    for i in range(labels.size(0)):
+    # {label -> [idx]}
+    bucket = [[] for i in range(10)]
+    for i in range(len(labels)):
         bucket[labels[i]].append(i)
 
     for i in range(num_users):
-        total = 100
+        total = 500
         for j in range(9):
-            num = int(ratio[i][j]*100)
-            rand_idxs = np.random.choice(bucket[i], num, replace=False)
+            num = int(ratio[i][j]*500)
+            rand_idxs = np.random.choice(bucket[j], num, replace=False)
             dict_users_test[i] = np.concatenate((dict_users_test[i], rand_idxs), axis=0)
             total -= num
-        rand_idxs = np.random.choice(bucket[i], total, replace=False)
+        rand_idxs = np.random.choice(bucket[9], total, replace=False)
         dict_users_test[i] = np.concatenate((dict_users_test[i], rand_idxs), axis=0)
 
     return dict_users_test

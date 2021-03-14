@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="a33565b4-bead-4999-a783-092993f869f7" name="172.18.233.41">
+        <fileTransfer rootFolder="/home/gbb" accessType="SFTP" host="172.18.233.41" port="10003" sshConfigId="64ec662a-9c7e-4bfe-be65-27efb8805d27" sshConfig="gbb@172.18.233.41:10003 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
