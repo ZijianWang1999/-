@@ -9,6 +9,7 @@ import torch
 
 from models.Nets import CNN
 from models.Server import FedAvg
+from models.test import test_img
 from utils.sample import noniid_train, noniid_test
 from utils.options import args_parser
 from models.Client import Client
@@ -28,6 +29,7 @@ if __name__ == '__main__':
     dict_users_test = noniid_test(test_set, args.num_users, ratio)
 
     print('Data finished...')
+
     # load global model
     net_glob = CNN(args=args).to(args.device)
     net_glob.train()
@@ -68,6 +70,9 @@ if __name__ == '__main__':
     # save global model
     torch.save(net_glob.state_dict(), './save/model.pt')
     print('Global model saved...')
+
+    # acc_glob, loss_glob = test_img(net_glob, test_set, args)
+    # print('Global accuracy: {:.3f}, global loss:{:.3f}'.format(acc_glob, loss_glob))
 
     # test each of clients
     test_acc = [0 for i in range(args.num_users)]

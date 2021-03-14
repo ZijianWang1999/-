@@ -14,7 +14,7 @@ def noniid_train(dataset, num_users):
     idxs = idxs_labels[0,:]
 
     # ratio [0...9] 
-    ratio = np.array([[0 for j in range(10)] for i in range(num_users)])
+    ratio = np.array([[0.0 for j in range(10)] for i in range(num_users)])
 
     # divide and assign
     for i in range(num_users):
@@ -24,7 +24,7 @@ def noniid_train(dataset, num_users):
             dict_users_train[i] = np.concatenate((dict_users_train[i], idxs[rand*num_imgs:(rand+1)*num_imgs]), axis=0)
         # get ratio
         for j in range(len(dict_users_train[i])):
-            ratio[i][labels[dict_users_train[i][j]]] += 1
+            ratio[i][labels[dict_users_train[i][j]]] += 1.0
         ratio[i] = ratio[i] / np.sum(ratio[i])
     
     return dict_users_train, ratio
