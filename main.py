@@ -7,7 +7,7 @@ import numpy as np
 from torchvision import datasets, transforms
 import torch
 
-from models.Nets import CNN
+from models.Nets import CNNMnist, CNNCifar
 from models.Server import FedAvg
 from models.test import test_img
 from utils.sample import noniid_train, noniid_test
@@ -20,18 +20,26 @@ if __name__ == '__main__':
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
     # load dataset
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_set = datasets.MNIST(root='./data/mnist', train=True, download=False, transform=transform)
-    test_set = datasets.MNIST(root='./data/mnist', train=False, download=False, transform=transform)
+    if args.dataset == 'mnist':
+        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        train_set = datasets.MNIST(root='./data/mnist', train=True, download=False, transform=transform)
+        test_set = datasets.MNIST(root='./data/mnist', train=False, download=False, transform=transform)
+    elif args.dataset == 'cifar':
+        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        train_set = datasets.CIFAR10('./data/cifar', train=True, download=False, transform=transform)
+        test_set = datasets.CIFAR10('./data/cifar', train=False, download=False, transform=transform)
+    else:
+        exit('Error: unrecognized dataset...')
+
 
     # split dataset {user_id: [list of data index]}
-    dict_users_train, ratio = noniid_train(train_set, args.num_users)
+    dict_users_train, ratio = noniid_train(train_set, args.num_users, args.dataset)
     dict_users_test = noniid_test(test_set, args.num_users, ratio)
 
     print('Data finished...')
 
     # load global model
-    net_glob = CNN(args=args).to(args.device)
+    net_glob = CNNCifar(args=args).to(args.device) if args.dataset == 'cifar' else CNNMnist(args=args).to(args.device)
     net_glob.train()
 
     # parameters
@@ -58,14 +66,21 @@ if __name__ == '__main__':
 
         # print loss
         loss_avg = sum(loss_locals) / len(loss_locals)
-        print('Round {:3d}, Average loss {:.3f}'.format(epoch, loss_avg))
+        if (epoch + 1) % 50 == 0:
+            print('Round {:3d}, Average loss {:.3f}'.format(epoch + 1, loss_avg))
         loss_train.append(loss_avg)
+
+        # print acc
+        if (epoch + 1) % 100 == 0:
+            acc_glob, loss_glob = test_img(net_glob, test_set, args)
+            print('Epoch: {:3d} global accuracy: {:.3f}, global loss:{:.3f}'.format(epoch + 1, acc_glob, loss_glob))
 
     # plot loss curve
     plt.figure()
     plt.plot(range(len(loss_train)), loss_train)
-    plt.ylabel('train_loss')
-    plt.savefig('./save/fed_{}_C{}.png'.format(args.meta_epochs, args.frac))
+    plt.ylabel('Train loss')
+    plt.xlabel('Global epoch')
+    plt.savefig('./save/fed_{}_C{}_{}.png'.format(args.meta_epochs, args.frac, args.dataset))
 
     # save global model
     torch.save(net_glob.state_dict(), './save/model.pt')

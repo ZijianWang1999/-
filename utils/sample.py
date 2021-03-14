@@ -1,8 +1,11 @@
 import numpy as np
 from torchvision import datasets, transforms
 
-def noniid_train(dataset, num_users):
-    num_shards, num_imgs = 200, 300
+def noniid_train(dataset, num_users, name):
+    if name == 'cifar':
+        num_shards, num_imgs = 200, 250
+    else:
+        num_shards, num_imgs = 200, 300
     idx_shard = [i for i in range(num_shards)]
     dict_users_train = {i: np.array([], dtype='int64') for i in range(num_users)}
     idxs = np.arange(num_shards * num_imgs)
