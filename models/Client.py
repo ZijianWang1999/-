@@ -58,6 +58,25 @@ class Client(object):
 
         return net.state_dict()
 
+    def local_train(self, net):
+        local_train_epoch = 150
+        local_train_lr = 0.05
+
+        net.train()
+
+        optimizer = torch.optim.SGD(net.parameters(), lr=local_train_lr, momentum=self.args.momentum)
+
+        for iter in range(local_train_epoch):
+            for batch_idx, (images, labels) in enumerate(self.dataset):
+                images, labels = images.to(self.args.device), labels.to(self.args.device)
+                net.zero_grad()
+                log_probs = net(images)
+                loss = self.loss_func(log_probs, labels)
+                loss.backward()
+                optimizer.step()
+
+        return net.state_dict()
+
     def test(self, net):
         net.eval()
 
