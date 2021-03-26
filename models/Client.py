@@ -43,9 +43,7 @@ class Client(object):
 
         optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr_local, momentum=self.args.momentum)
 
-        epoch_loss = []
         for iter in range(self.args.local_ep):
-            batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.dataset):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
                 net.zero_grad()
@@ -53,8 +51,6 @@ class Client(object):
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 optimizer.step()
-                batch_loss.append(loss.item())
-            epoch_loss.append(sum(batch_loss)/len(batch_loss))
 
         return net.state_dict()
 

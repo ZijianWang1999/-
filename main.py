@@ -10,7 +10,7 @@ import torch
 from models.Nets import CNNMnist, CNNCifar
 from models.Server import FedAvg
 from models.test import test_img
-from utils.sample import noniid_train2, noniid_test
+from utils.sample import noniid_train, noniid_test
 from utils.options import args_parser
 from models.Client import Client
 
@@ -33,8 +33,7 @@ if __name__ == '__main__':
 
 
     # split dataset {user_id: [list of data index]}
-    # dict_users_train, ratio = noniid_train(train_set, args.num_users, args.dataset)
-    dict_users_train, ratio = noniid_train2(train_set, args.num_users)
+    dict_users_train, ratio = noniid_train(train_set, args.num_users)
     dict_users_test = noniid_test(test_set, args.num_users, ratio)
 
     print('Data finished...')
@@ -87,9 +86,6 @@ if __name__ == '__main__':
     torch.save(net_glob.state_dict(), './save/model.pt')
     print('Global model saved...')
 
-    # acc_glob, loss_glob = test_img(net_glob, test_set, args)
-    # print('Global accuracy: {:.3f}, global loss:{:.3f}'.format(acc_glob, loss_glob))
-
     # test each of clients
     test_acc = [0 for i in range(args.num_users)]
     test_loss = [0 for i in range(args.num_users)]
@@ -102,9 +98,6 @@ if __name__ == '__main__':
         client = Client(args=args, dataset=test_set, idxs=dict_users_test[idx], bs=args.test_bs)
         net_glob.load_state_dict(w_client)
         test_acc[idx], test_loss[idx] = client.test(net=copy.deepcopy(net_glob).to(args.device))
-
-        # torch.save(net_glob.state_dict(), './save/model{}.pt'.format(idx))
-        # print('Global model saved...')
 
     print('\nAvg test acc = ({:.3f}%), Avg test loss = {:.3f}\n'.format(np.sum(np.array(test_acc)) / args.num_users
                                                                      , np.sum(np.array(test_loss)) / args.num_users))
